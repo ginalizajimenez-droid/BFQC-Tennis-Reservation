@@ -441,10 +441,15 @@ function renderTypeGrid(){
       style="${bookType===name?`background:${t.bg};border:2.5px solid ${t.color};color:${t.color};box-shadow:0 2px 10px ${t.color}28;`:""}">
       <div style="font-size:22px;margin-bottom:3px;">${t.icon}</div>
       <div style="font-weight:700;font-size:12px;">${name}</div>
-      <div style="font-size:13px;margin-top:3px;color:${bookType===name?t.color:"var(--text-faint)"};">${fmt(t.price)}/hr</div>
+      <div style="font-size:13px;margin-top:3px;color:${bookType===name?t.color:"var(--text-faint)"};">${rateLabel(name)}</div>
     </button>`).join("");
 }
 function selectType(n){bookType=n;renderTypeGrid();renderSlotGrid();}
+function confirmSingleSlot(){
+  if(!startSlot) return;
+  endSlot = startSlot; // 1 slot = 1 hour/game
+  renderSlotGrid();
+}
 
 function renderPaymentGrid(){
   const el=document.getElementById("paymentGrid");if(!el)return;
@@ -498,7 +503,9 @@ function renderSlotHint(){
     const hrs=slotIdx(endSlot)-slotIdx(startSlot)+1;
     const ps=t?` &middot; <strong style="color:${t.color};">${fmt(totalPrice(bookType,hrs))}</strong>`:"";
     el.innerHTML=`<div class="slot-hint">✅ <strong>${startSlot} &ndash; ${endSlotLabel(startSlot,hrs)}</strong> &middot; ${hrs} hr${hrs>1?"s":""}${ps}</div>`;
-  }else{el.innerHTML=`<div class="slot-hint">Start: <strong>${startSlot}</strong> — now tap an end slot</div>`;}
+  }else{
+    el.innerHTML=`<div class="slot-hint">✅ <strong>${startSlot} &ndash; ${endSlotLabel(startSlot,1)}</strong> &middot; ${unitLabel(bookType||'Training',1)}${t?` &middot; <strong style="color:${t.color};">${fmt(totalPrice(bookType,1))}</strong>`:""}<br/><span style="font-size:11px;color:var(--text-muted);">Tap another slot to extend, or <strong style="color:var(--green);cursor:pointer;" onclick="confirmSingleSlot()">confirm 1 ${(TYPES[bookType||'Training']||{unit:'hour'}).unit}</strong></span></div>`;
+  }
 }
 
 function showBookError(msg){const el=document.getElementById("bookError");if(el)el.innerHTML=`<div class="alert-error">⚠️ ${msg}</div>`;}
@@ -506,7 +513,8 @@ function showBookError(msg){const el=document.getElementById("bookError");if(el)
 async function confirmBook(){
   if(getBlockedInfo(bookDate)){showBookError("This date is unavailable: "+getBlockedInfo(bookDate).reason);return;}
   if(!bookType){showBookError("Please select a reservation type.");return;}
-  if(!startSlot||!endSlot){showBookError("Please select start and end time slots.");return;}
+  if(!startSlot){showBookError("Please select a start time slot.");return;}
+  if(!endSlot) endSlot = startSlot; // allow single slot
   if(!bookPayment){showBookError("Please select a payment method.");return;}
   const name=document.getElementById("bName").value.trim();
   const phone=document.getElementById("bPhone").value.trim();
