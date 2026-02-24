@@ -238,7 +238,7 @@ button:active{opacity:.82;}
 // ═══════════════════════════════════════════════════════════════
 //  !! STEP 1: PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW !!
 // ═══════════════════════════════════════════════════════════════
-const SCRIPT_URL = "const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8QXSJu7EvL5VCXdQ2KCr1Ro34Xov7I3xpY-Ka9NkTjYOPV6r5rSSg1B1I80j6k31E/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7Y6F2SdmyGau5SybVYVIK0ivYdv-IB-oa0-efUV1TTMyyskNgemdzHS15G2zAGFOt/exec";
 // Example: "https://script.google.com/macros/s/AKfycb.../exec"
 // ═══════════════════════════════════════════════════════════════
 
@@ -297,15 +297,22 @@ function isDateBlocked(date){return blockedDates.some(b=>b.date===date);}
 function getBlockedInfo(date){return blockedDates.find(b=>b.date===date);}
 
 // ── Google Sheets API ─────────────────────────────────────────
-function isConfigured(){return SCRIPT_URL && SCRIPT_URL !== "const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8QXSJu7EvL5VCXdQ2KCr1Ro34Xov7I3xpY-Ka9NkTjYOPV6r5rSSg1B1I80j6k31E/exec";";}
+function isConfigured(){return SCRIPT_URL && SCRIPT_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";}
 
 async function apiCall(action, data={}) {
   if(!isConfigured()) throw new Error("Script URL not configured");
-  const url = SCRIPT_URL + "?action=" + action;
+
+  // Google Apps Script requires GET with URL params for cross-origin requests
+  // For read operations use GET, for write operations encode data in URL params
+  const payload = encodeURIComponent(JSON.stringify({action, ...data}));
+  const url = SCRIPT_URL + "?action=" + action + "&payload=" + payload;
+
   const res = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify({action, ...data}),
+    method: "GET",
+    redirect: "follow",
   });
+
+  if(!res.ok) throw new Error("HTTP " + res.status);
   const json = await res.json();
   if(json.error) throw new Error(json.error);
   return json;
