@@ -148,19 +148,10 @@ button:active{opacity:.82;}
       <h1 style="font-size:30px;color:var(--blue);font-style:italic;letter-spacing:1px;margin-bottom:6px;">BFQC Tennis Club</h1>
       <p style="color:var(--text-mid);font-size:15px;margin-bottom:4px;">Court Reservation System</p>
       <p style="color:var(--text-muted);font-size:13px;margin-bottom:30px;">No account needed &middot; Book up to 60 days ahead &middot; 6:00 AM &ndash; 10:00 PM</p>
-      <div class="info-grid">
-        <div class="info-card" style="background:#e1f5fe;border:1.5px solid #81d4fa33;"><div style="font-size:24px;margin-bottom:8px;">🕐</div><div style="font-weight:700;font-size:13px;color:#0277bd;margin-bottom:5px;">Operating Hours</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">6:00 AM &ndash; 10:00 PM daily</div></div>
-        <div class="info-card" style="background:#e8f5e9;border:1.5px solid #a5d6a733;"><div style="font-size:24px;margin-bottom:8px;">📞</div><div style="font-weight:700;font-size:13px;color:#2e7d32;margin-bottom:5px;">Contact Us</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">09665340188</div></div>
-        <div class="info-card" style="background:#f3e5f5;border:1.5px solid #ce93d833;"><div style="font-size:24px;margin-bottom:8px;">✅</div><div style="font-weight:700;font-size:13px;color:#6a1b9a;margin-bottom:5px;">Admin Approval</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">Reviewed before confirmation</div></div>
-        <div class="info-card" style="background:#fff3e0;border:1.5px solid #ffcc8033;"><div style="font-size:24px;margin-bottom:8px;">📄</div><div style="font-weight:700;font-size:13px;color:#e65100;margin-bottom:5px;">Receipt</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">Download after every booking</div></div>
-      </div>
+      <div class="info-grid" id="homeInfoGrid"></div>
       <div class="card" style="margin-bottom:24px;text-align:left;">
         <div class="sec-title">Court Rates (per hour)</div>
-        <div class="pricing-grid">
-          <div class="pricing-card" style="background:#e1f5fe;border:1.5px solid #81d4fa;"><div style="font-size:24px;margin-bottom:6px;">🧍</div><div style="font-weight:700;font-size:14px;color:#0277bd;margin-bottom:4px;">Singles</div><div style="font-size:22px;font-weight:700;">&#8369;300</div><div style="color:var(--text-muted);font-size:10px;margin-top:2px;">per game</div></div>
-          <div class="pricing-card" style="background:#fff3e0;border:1.5px solid #ffcc80;"><div style="font-size:24px;margin-bottom:6px;">👥</div><div style="font-weight:700;font-size:14px;color:#e65100;margin-bottom:4px;">Doubles</div><div style="font-size:22px;font-weight:700;">&#8369;480</div><div style="color:var(--text-muted);font-size:10px;margin-top:2px;">per game</div></div>
-          <div class="pricing-card" style="background:#f3e5f5;border:1.5px solid #ce93d8;"><div style="font-size:24px;margin-bottom:6px;">🎓</div><div style="font-weight:700;font-size:14px;color:#6a1b9a;margin-bottom:4px;">Training</div><div style="font-size:22px;font-weight:700;">&#8369;480</div><div style="color:var(--text-muted);font-size:10px;margin-top:2px;">per hour</div></div>
-        </div>
+        <div class="pricing-grid" id="homePricingGrid"></div>
       </div>
       <div class="flex gap-10" style="justify-content:center;flex-wrap:wrap;">
         <button class="btn-green" style="padding:13px 28px;font-size:15px;" onclick="navTo('book')">🎾 Book a Court &rarr;</button>
@@ -245,18 +236,35 @@ button:active{opacity:.82;}
 // ═══════════════════════════════════════════════════════════════
 //  !! STEP 1: PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW !!
 // ═══════════════════════════════════════════════════════════════
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXzcP5ZH_H59LmPlFqqsvxD1hxbK6acyQ23tZAl9UbDVZ-H8eDNrjMRAiqz1Lytrc/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxLwdc_jpMc1KOesSWHZAofkbCjN4mXOLjwAwFeS5TT5PICZuIF0_q_O43j9WPzyTNE/exec";
 // Example: "https://script.google.com/macros/s/AKfycb.../exec"
 // ═══════════════════════════════════════════════════════════════
 
 const ADMIN_PASSWORD = "bfqc2024";
-const CONTACT = "09665340188";
-const TIME_SLOTS = ["6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM","9:00 PM"];
-const TYPES = {
-  Singles:  {color:"#0277bd",bg:"#e1f5fe",border:"#81d4fa",icon:"🧍",price:300,unit:"game"},
-  Doubles:  {color:"#e65100",bg:"#fff3e0",border:"#ffcc80",icon:"👥",price:480,unit:"game"},
-  Training: {color:"#6a1b9a",bg:"#f3e5f5",border:"#ce93d8",icon:"🎓",price:480,unit:"hour"},
+
+// Site settings — loaded from Google Sheets, editable in Admin → Settings
+let siteSettings = {
+  contact:        "09665340188",
+  hoursOpen:      "6:00 AM",
+  hoursClose:     "10:00 PM",
+  pricesSingles:  300,
+  pricesDoubles:  480,
+  pricesTraining: 480,
+  unitSingles:    "game",
+  unitDoubles:    "game",
+  unitTraining:   "hour",
 };
+const TIME_SLOTS = ["6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM","9:00 PM"];
+// TYPES is a function so prices always reflect current siteSettings
+function getTypes(){
+  return {
+    Singles:  {color:"#0277bd",bg:"#e1f5fe",border:"#81d4fa",icon:"🧍",price:siteSettings.pricesSingles,  unit:siteSettings.unitSingles},
+    Doubles:  {color:"#e65100",bg:"#fff3e0",border:"#ffcc80",icon:"👥",price:siteSettings.pricesDoubles,  unit:siteSettings.unitDoubles},
+    Training: {color:"#6a1b9a",bg:"#f3e5f5",border:"#ce93d8",icon:"🎓",price:siteSettings.pricesTraining, unit:siteSettings.unitTraining},
+  };
+}
+// Keep TYPES as a compatibility alias — always reflects latest settings
+let TYPES = getTypes();
 const PAYMENT_METHODS = {
   gcash: {label:"GCash",     icon:"📱",color:"#0277bd",bg:"#e1f5fe",border:"#81d4fa"},
   cash:  {label:"Cash on Site",icon:"💵",color:"#2e7d32",bg:"#e8f5e9",border:"#a5d6a7"},
@@ -473,6 +481,7 @@ function navTo(id){
   document.getElementById("mobileNav").style.display="none";
   document.getElementById("hamburgerBtn").textContent="☰";
   buildNav();
+  if(id==="home")renderHome();
   if(id==="book")renderBook();
   if(id==="schedule"){
     renderSchedule();
@@ -502,6 +511,125 @@ function showToast(msg,isError=false){
 function hideToast(){document.getElementById("toast").style.display="none";}
 
 // ── BOOK ──────────────────────────────────────────────────────
+function renderHome(){
+  // Re-render dynamic parts of home page with current siteSettings
+  TYPES = getTypes(); // refresh prices
+  const ig = document.getElementById("homeInfoGrid");
+  if(ig) ig.innerHTML = `
+    <div class="info-card" style="background:#e1f5fe;border:1.5px solid #81d4fa33;"><div style="font-size:24px;margin-bottom:8px;">🕐</div><div style="font-weight:700;font-size:13px;color:#0277bd;margin-bottom:5px;">Operating Hours</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">${siteSettings.hoursOpen} &ndash; ${siteSettings.hoursClose} daily</div></div>
+    <div class="info-card" style="background:#e8f5e9;border:1.5px solid #a5d6a733;"><div style="font-size:24px;margin-bottom:8px;">📞</div><div style="font-weight:700;font-size:13px;color:#2e7d32;margin-bottom:5px;">Contact Us</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">${siteSettings.contact}</div></div>
+    <div class="info-card" style="background:#f3e5f5;border:1.5px solid #ce93d833;"><div style="font-size:24px;margin-bottom:8px;">✅</div><div style="font-weight:700;font-size:13px;color:#6a1b9a;margin-bottom:5px;">Admin Approval</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">Reviewed before confirmation</div></div>
+    <div class="info-card" style="background:#fff3e0;border:1.5px solid #ffcc8033;"><div style="font-size:24px;margin-bottom:8px;">📄</div><div style="font-weight:700;font-size:13px;color:#e65100;margin-bottom:5px;">Receipt</div><div style="font-size:12px;line-height:1.5;color:var(--text-mid);">Download after every booking</div></div>`;
+  const pg = document.getElementById("homePricingGrid");
+  if(pg) pg.innerHTML = Object.entries(TYPES).map(([name,t])=>`
+    <div class="pricing-card" style="background:${t.bg};border:1.5px solid ${t.border};">
+      <div style="font-size:24px;margin-bottom:6px;">${t.icon}</div>
+      <div style="font-weight:700;font-size:14px;color:${t.color};margin-bottom:4px;">${name}</div>
+      <div style="font-size:22px;font-weight:700;">&#8369;${t.price.toLocaleString()}</div>
+      <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">per ${t.unit}</div>
+    </div>`).join("");
+  const sh = document.getElementById("homeSubHeader");
+  if(sh) sh.textContent = `No account needed · Book up to 60 days ahead · ${siteSettings.hoursOpen} – ${siteSettings.hoursClose}`;
+}
+
+function buildSettingsTab(){
+  const t = TYPES;
+  return `
+    <div class="card card-mb">
+      <div class="sec-title">⏰ Operating Hours</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;">
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">Opening Time</label>
+          <select id="setHoursOpen">
+            ${["5:00 AM","6:00 AM","7:00 AM","8:00 AM"].map(h=>`<option value="${h}" ${siteSettings.hoursOpen===h?"selected":""}>${h}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">Closing Time</label>
+          <select id="setHoursClose">
+            ${["8:00 PM","9:00 PM","10:00 PM","11:00 PM","12:00 AM"].map(h=>`<option value="${h}" ${siteSettings.hoursClose===h?"selected":""}>${h}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card card-mb">
+      <div class="sec-title">📞 Contact Number</div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Phone / WhatsApp</label>
+        <input type="tel" id="setContact" value="${siteSettings.contact}" placeholder="09XX XXX XXXX"/>
+      </div>
+    </div>
+    <div class="card card-mb">
+      <div class="sec-title">💰 Court Rates</div>
+      ${Object.entries(t).map(([name,typ])=>`
+        <div style="background:${typ.bg};border:1.5px solid ${typ.border};border-radius:10px;padding:14px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:20px;">${typ.icon}</span>
+            <span style="font-weight:700;color:${typ.color};font-size:14px;">${name}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label">Price (₱)</label>
+              <input type="number" id="setPrice${name}" value="${typ.price}" min="0" step="10"/>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label">Per</label>
+              <select id="setUnit${name}">
+                <option value="game" ${typ.unit==="game"?"selected":""}>Game</option>
+                <option value="hour" ${typ.unit==="hour"?"selected":""}>Hour</option>
+                <option value="session" ${typ.unit==="session"?"selected":""}>Session</option>
+                <option value="set" ${typ.unit==="set"?"selected":""}>Set</option>
+              </select>
+            </div>
+          </div>
+        </div>`).join("")}
+    </div>
+    <div id="settingsMsg" style="margin-bottom:10px;font-size:13px;"></div>
+    <button class="btn-green" style="width:100%;padding:14px;font-size:14px;" onclick="saveSettings()">💾 Save Settings</button>`;
+}
+
+async function saveSettings(){
+  const msg = document.getElementById("settingsMsg");
+  msg.innerHTML = '<span style="color:var(--text-muted);">Saving...</span>';
+
+  // Read values from form
+  siteSettings.hoursOpen      = document.getElementById("setHoursOpen").value;
+  siteSettings.hoursClose     = document.getElementById("setHoursClose").value;
+  siteSettings.contact        = document.getElementById("setContact").value.trim();
+  siteSettings.pricesSingles  = Number(document.getElementById("setPriceSingles").value)  || 300;
+  siteSettings.pricesDoubles  = Number(document.getElementById("setPriceDoubles").value)  || 480;
+  siteSettings.pricesTraining = Number(document.getElementById("setPriceTraining").value) || 480;
+  siteSettings.unitSingles    = document.getElementById("setUnitSingles").value;
+  siteSettings.unitDoubles    = document.getElementById("setUnitDoubles").value;
+  siteSettings.unitTraining   = document.getElementById("setUnitTraining").value;
+
+  try {
+    await apiCall("saveSettings", {settings: siteSettings});
+    TYPES = getTypes(); // refresh
+    renderHome();
+    msg.innerHTML = '<span style="color:var(--green);">✅ Settings saved successfully!</span>';
+    showToast("Settings saved!");
+  } catch(e) {
+    msg.innerHTML = '<span style="color:var(--danger);">❌ Error: '+e.message+'</span>';
+  }
+}
+
+async function loadSettings(){
+  try {
+    const data = await apiCall("getSettings", {});
+    if(data.settings){
+      Object.assign(siteSettings, data.settings);
+      // parse numbers
+      siteSettings.pricesSingles  = Number(siteSettings.pricesSingles)  || 300;
+      siteSettings.pricesDoubles  = Number(siteSettings.pricesDoubles)  || 480;
+      siteSettings.pricesTraining = Number(siteSettings.pricesTraining) || 480;
+      TYPES = getTypes();
+    }
+  } catch(e) {
+    console.warn("Settings load failed:", e.message);
+  }
+}
+
 function renderBook(){
   document.getElementById("bookContent").innerHTML=`
     <div class="card card-mb">
@@ -544,6 +672,7 @@ function updateBookDateLabel(){
 }
 
 function renderTypeGrid(){
+  TYPES=getTypes();
   const el=document.getElementById("typeGrid");if(!el)return;
   el.innerHTML=Object.entries(TYPES).map(([name,t])=>`
     <button class="type-btn" onclick="selectType('${name}')"
@@ -724,7 +853,7 @@ async function handleCancel(){
   if(hrs<0){msgEl.innerHTML=`<span style="color:var(--danger);">❌ This reservation has already passed.</span>`;return;}
   if(!canCancel(found)){
     const h=Math.max(0,Math.floor(hrs)),m=Math.floor((hrs%1)*60);
-    msgEl.innerHTML=`<span style="color:var(--danger);">❌ Cannot cancel — ${h}h ${m}m remaining. Contact: <strong>${CONTACT}</strong></span>`;return;
+    msgEl.innerHTML=`<span style="color:var(--danger);">❌ Cannot cancel — ${h}h ${m}m remaining. Contact: <strong>${siteSettings.contact}</strong></span>`;return;
   }
   msgEl.innerHTML=`<span style="color:var(--text-muted);">Cancelling...</span>`;
   try{
@@ -809,7 +938,7 @@ function downloadReceipt(res){
     <div class="price-box"><span class="price-lbl">Total Amount (&#8369;${TYPES[res.type].price}/hr &times; ${res.hours}hr)</span><span class="price-val">&#8369;${price.toLocaleString()}</span></div>
     <div class="div"></div><div class="note">${note}</div>
   </div>
-  <div class="ftr">Tel: ${CONTACT} | Generated: ${nowStr()} | BFQC Tennis Club</div>
+  <div class="ftr">Tel: ${siteSettings.contact} | Generated: ${nowStr()} | BFQC Tennis Club</div>
 </div></body></html>`;
   const blob=new Blob([html],{type:"text/html"});const url=URL.createObjectURL(blob);
   const a=document.createElement("a");a.href=url;a.download=`BFQC-Receipt-${res.code}.html`;a.click();URL.revokeObjectURL(url);
@@ -834,13 +963,15 @@ function renderAdmin(){
     {id:"pending",  label:`⏳ Pending (${pending.length})`,  ab:"#fff3e0",ac:"#e65100"},
     {id:"approved", label:`✅ Approved (${approved.length})`, ab:"#e8f5e9",ac:"#2e7d32"},
     {id:"schedule", label:"📋 Schedule",        ab:"#e8f5e9",ac:"#2e7d32"},
+    {id:"settings", label:"⚙️ Settings",         ab:"#e8eaf6",ac:"#3949ab"},
     {id:"weekly",   label:"📅 Weekly",         ab:"#e1f5fe",ac:"#0277bd"},
     {id:"monthly",  label:"📅 Monthly",        ab:"#f3e5f5",ac:"#6a1b9a"},
     {id:"blocked",  label:`⛔ Blocked (${blockedDates.length})`,ab:"#ffebee",ac:"#c62828"},
   ];
   const tabBtns=tabs.map(tb=>{const a=adminTab===tb.id;return`<button class="btn-outline btn-sm" style="${a?`background:${tb.ab};border:1.5px solid ${tb.ac};color:${tb.ac};font-weight:bold;`:""}" onclick="setAdminTab('${tb.id}')">${tb.label}</button>`;}).join("");
   let content="";
-  if(adminTab==="schedule")content=buildAdminSchedule();
+  if(adminTab==="settings")content=buildSettingsTab();
+  else if(adminTab==="schedule")content=buildAdminSchedule();
   else if(adminTab==="dashboard")content=buildDashboard();
   else if(adminTab==="pending")content=pending.length===0?emptyCard("No pending reservations."):pending.map(r=>buildAdminCard(r,"pending")).join("");
   else if(adminTab==="approved")content=approved.length===0?emptyCard("No approved reservations."):approved.map(r=>buildAdminCard(r,"approved")).join("");
@@ -1275,6 +1406,7 @@ async function adminUnblock(date){
 async function init(){
   document.getElementById("configBanner")?.remove();
   await loadData();
+  await loadSettings();
   buildNav();
   navTo("home");
   const si=document.getElementById("schedDateInput");
